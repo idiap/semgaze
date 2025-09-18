@@ -1,0 +1,23 @@
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store/
+
+# Data
+data/
+weights/
+checkpoints/
+semgaze-artifacts.tar.gz
+
+# Project
+__pycache__/
+main.log
+semgaze-artifacts.tar.gz
+*.csv
+experiments/
+lightning_logs/
+logs/
+wandb/
+.hydra/
+.vscode/

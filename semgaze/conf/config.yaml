@@ -1,0 +1,144 @@
+#
+# SPDX-FileCopyrightText: Copyright © 2024 Idiap Research Institute <contact@idiap.ch>
+#
+# SPDX-FileContributor: Samy Tafasca <samy.tafasca@idiap.ch>
+#
+# SPDX-License-Identifier: CC-BY-NC-4.0
+#
+
+# ==================================================================================================================== #
+#                                                EXPERIMENT CONFIGURATION                                              # 
+# ==================================================================================================================== #
+
+
+project:
+    name: semgaze # name of the wandb project
+    version: 1.0.0
+    description: SemGaze - Transformer encoder-decoder architecture for gaze target localization and recognition.
+    root: </path/to>/semgaze # FILL ME
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+experiment:
+    name: run-name # name of the wandb job
+    group: null # name of the wandb group
+    task: train+test # combination of {train, val, test} separated by '+' sign
+    dataset: gazefollow # gazefollow, gazehoi
+    path: ${hydra:runtime.cwd} # to retrieve logs and checkpoints
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+data:
+    num_people: 1 # int or -1 to include all people
+    image_size: 256
+    heatmap_size: 64
+    heatmap_sigma: 3
+    return_head_mask: False
+    gf:
+        root: </path/to>/gazefollow_extended # FILL ME
+        root_annotations: </path/to/folder/with/annotations> # FILL ME
+        root_heads: </path/to>/GazeFollow-head # FILL ME (if needed)
+        num_train_samples: 108955
+        vocab_size: 346
+    gazehoi:
+        root: </path/to>/GazeHOI # FILL ME
+        num_train_samples: 47044
+        vocab_size: 463
+
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+model:
+    semgaze:
+        patch_size: 16
+        token_dim: 768
+        image_size: ${data.image_size}
+        gaze_vec_dim: 2
+        encoder_depth: 12
+        encoder_num_heads: 12
+        encoder_num_global_tokens: 1
+        decoder_depth: 2
+        decoder_num_heads: 8
+        temp_init_value: 0.07
+    pretraining:
+        gaze_backbone: </path/to>/semgaze/weights/gaze360_resnet18.pt # FILL ME
+        image_encoder: </path/to>/semgaze/weights/multimae-b_98_rgb+-depth-semseg_1600e_multivit-afff3f8c.pth # FILL ME
+    weights: null # /!\ null (default), or path to a checkpoint (overrides pretraining weights)
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+loss:
+    weight_heatmap: 1000
+    weight_angular: 3
+    weight_label: 1
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+optimizer:
+    lr: 2e-4
+    weight_decay: 3e-3
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+scheduler:
+    type: cosine_warmup # cosine_warmup (default), null (no scheduler)
+    warmup_epochs: 4
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+train: 
+    seed: 10 # int or null for no seed
+    matmul_precision: highest # highest (default), high, medium
+    precision: 32 # 64 (double), 32 (full), 16 (16bit mixed), bf16-mixed (bfloat16 mixed). Defaults to 32.
+    epochs: 20
+    batch_size: 300
+    accumulate_grad_batches: 1 # 1 (default, no accumulation)
+    device: cuda
+    resume: False 
+    resume_from: null 
+    checkpointing:
+        monitor: "metric/val/dist" # "metric/val/dist" (default), "loss/val", etc.
+        mode: "min" # "min" (default), "max"
+    freeze:
+        gaze_encoder: False 
+        image_tokenizer: False
+        image_encoder: False
+        gaze_decoder: False
+    swa:
+        use: True
+        lr: 1e-5
+        epoch_start: 17
+        annealing_epochs: 3
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+val: 
+    checkpoint: null
+    batch_size: 128
+    device: ${train.device}
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+test:
+    checkpoint: null # or experiments/yyyy-mm-dd/hh-mm-ss/checkpoints/last.ckpt to test from an existing experiment
+    batch_size: 128
+    device: ${train.device}
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+wandb:
+    log: True
+    entity: null # /!\ null, or your wandb entity
+    watch: null # /!\ null, gradients, parameters, all
+    watch_freq: 500
+
+# ------------------------------------------------------------------------------------------------------------------- #
+
+hydra: 
+    run: 
+        dir: ./
+    sweep:
+        dir: ${hydra.run.dir}
+        subdir: ${hydra.job.num}
+    job: 
+        chdir: False
