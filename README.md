@@ -28,9 +28,9 @@ pip install -r requirements.txt
 ```
 
 ### 2. Download data
-In order to reproduce the experiments, you will need to download the [GazeFollow] and GazeHOI datasets. GazeFollow can be downloaded from [here](https://www.dropbox.com/s/3ejt9pm57ht2ed4/gazefollow_extended.zip?dl=0), while GazeHOI instructions and annotations are provided in this repository.
+In order to reproduce the experiments, you will need to download the GazeFollow and GazeHOI datasets. GazeFollow can be downloaded from [here](https://www.dropbox.com/s/3ejt9pm57ht2ed4/gazefollow_extended.zip?dl=0), while GazeHOI instructions and annotations are provided in this repository.
 
-First, you can download all resources from the following [link](). Unzip the file and place the folders `data`, `weights` and `checkpoints` under the project directory.
+First, you can download all resources from the following [link](https://zenodo.org/records/17107341). Unzip the file and place the folders `data`, `weights` and `checkpoints` under the project directory.
 
 The folder `data` contains instructions and annotations as well as CLIP embeddings for class labels for both GazeFollow and GazeHOI. Refer to `data/README.md` for more details.
 
